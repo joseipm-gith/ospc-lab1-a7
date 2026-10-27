@@ -35,3 +35,29 @@ Bash normally reports the status of the last pipeline command.
 
 Suggested fix: Correct the input path and enable set -euo pipefail.
 
+## Section 5.4 — Task 3: Auditing
+
+Sample (100,000 orders):
+Elapsed: 1.55 s
+User: 1.58 s
+System: 0.36 s
+Peak memory: 130528 KB
+
+Full dataset (8,400,000 orders):
+Elapsed: 83.48 s
+User: 63.66 s
+System: 20.42 s
+Peak memory: 634316 KB
+
+System calls (100,000 orders):
+openat: 100686
+write: 100001
+close: 100673
+Total: 301360
+
+
+Diagnosis: The script opens and closes the output file for every order, creating excessive system calls.
+
+Estimated buffered writes for sample: approximately 15 using 128 KiB buffers.
+
+
