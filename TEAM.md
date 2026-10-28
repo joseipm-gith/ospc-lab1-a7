@@ -16,5 +16,5 @@ Where to find each detail (Section 3 of the handout has the same table):
 
 | Name | GitHub username | Laptop (model, operating system) | Cores and threads of the laptop | CPUs in the container (`nproc`) |
 |---|---|---|---|---|
-|Jose Plaza |joseipm-gith |MacBook Pro 13-inch Two Thunderbolt 3 ports, 
-Ventura 13.7.8 |2.3 GHz Dual-Core Intel Core i5 | |
+|Jose Plaza |@joseipm-gith|MacBook Pro 13-inch Two Thunderbolt 3 ports, macOS Ventura 13.7.8 | 2 cores, 4 threads | 4 |
+
