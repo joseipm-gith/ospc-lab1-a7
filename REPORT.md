@@ -19,11 +19,26 @@ not whole screens.
 
 ## Task 2: Extracting data
 
-- Symptom:
-- Commands and recordings you used, why you chose them, and what they showed:
-- Cause:
-- Fix:
+- Symptom: The extraction script initially generated six empty regional CSV files, even though it printed `extracts: done`. All six files failed `tools/check.py`.
+
+- Commands and recordings you used, why you chose them, and what they showed: We ran `bash steps/extracts.sh` to execute the extraction and `python3 tools/check.py` to verify the output. The checker showed that all six files contained zero rows instead of the expected number of orders. We inspected `steps/extracts.sh` to identify the problem. After fixing the script, we ran the same commands to confirm the correction. We also used `/usr/bin/time -f "$T" bash steps/extracts.sh` to measure execution time and memory usage.
+
+- Cause: The script changed its working directory and then used an incorrect relative path (`../data/sales_2025.csv`) to read the dataset. The `2>/dev/null` redirection hid the error from `grep`. Without `pipefail`, the script could still exit successfully because the final command in the pipeline succeeded.
+
+- Fix: We changed `steps/extracts.sh` to use the `DATA` variable for the input file and the `OUT` variable for the output directory. We also added `set -euo pipefail` and removed `2>/dev/null` so errors would no longer be hidden. The fix was committed as `e3c816b`.
+
 - Before and after (your measurements):
+
+  | Metric | Before | After |
+  |---|---|---|
+  | Elapsed time | 1.05 s | 13.23 s |
+  | User CPU time | 0.05 s | 8.70 s |
+  | System CPU time | 1.02 s | 11.15 s |
+  | Peak memory | 7,896 KB | 7,772 KB |
+  | Output | Six empty files | Six correct files |
+  | `tools/check.py` | FAIL | PASS |
+
+  After the fix, all six regional CSV files contained the expected number of rows and passed validation. Measurements were taken on Jose's MacBook Pro (2017).
 
 ## Task 3: Auditing
 
@@ -76,3 +91,17 @@ Tool: Claude (Anthropic), claude.ai chat, 27 Oct to 2 Nov 2026.
 - Text: the Warm-up and Task 1 sections above were drafted by Claude from the command outputs I pasted.
 - Explanations: Claude explained the outputs (exit status 137, `memory.events`, `strace -c`) and helped me answer the in-class questions. I ran every command on my own laptop, and the numbers come from my terminal.
 - Where it needed correcting: its first example for `machine.txt` was a placeholder that did not match my laptop, so I fixed it with my real model and macOS version. It also first overlooked smachador's execute-permission fix, which was already in the repository history.
+
+### joseipm-gith
+
+Tool: ChatGPT (OpenAI), chatgpt.com, 2 Nov 2026.
+
+- Code: The modifications to steps/extracts.sh, including the DATA and OUT variables and set -euo pipefail, were suggested by ChatGPT and tested by me.
+
+- Text: The Task 2 section was drafted with ChatGPT using my actual command outputs and measurements.
+
+- Explanations: ChatGPT helped me understand the incorrect file path, error suppression, pipefail, and the before-and-after performance results.
+
+- Where it needed correcting: The original performance measurements were initially missing. I recovered the previous code using Git, measured it myself, and updated the results.
+
+- Prompts used: "Help me with Section 6 and identify what has already been fixed", "Help me complete Task 2", and "Is there any way to get the measurements before fixing the code?"
