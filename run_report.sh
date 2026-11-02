@@ -2,6 +2,8 @@
 # Nightly revenue report for the 2025 orders.
 # Run it from the repository folder: ./run_report.sh
 
+set -euo pipefail
+
 cd "$(dirname "$0")"
 export OUT=${OUT:-$HOME/data/out}
 mkdir -p "$OUT"
