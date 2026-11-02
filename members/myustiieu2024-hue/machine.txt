@@ -1,0 +1,10 @@
+github_user: myustiieu2024-hue
+laptop: Apple MacBook Air 13-inch M4 2025, macOS 15.6.1
+date: 2026-11-02 15:21 UTC
+cpus_in_container: 10
+architecture: aarch64
+cpu: Apple - 
+kernel: 7.0.12-linuxkit
+docker_memory_kb: 8124516
+container_memory_limit: 2147483648
+container_swap_limit: 0
