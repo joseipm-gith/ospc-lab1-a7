@@ -12,6 +12,7 @@ path = os.path.join(OUT, "audit_2025.csv")
 orders = pd.read_csv(DATA, usecols=["order_id", "region", "quantity", "unit_price"])
 orders["revenue"] = orders["quantity"] * orders["unit_price"]
 
+#Generated with Claude (Anthropic): open the output of the file once instead of once per order. 
 with open(path, "w") as f:
     for order in orders.itertuples():
         f.write(f"{order.order_id},{order.region},{order.revenue:.2f}\n")
