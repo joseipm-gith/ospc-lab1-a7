@@ -20,3 +20,4 @@ Where to find each detail (Section 3 of the handout has the same table):
 |Ares Oliveres|@aoliveresieu2024-lgtm|Apple MacBook Pro (Mac15,10) M3 Max, 36 GB, macOS 26.6.2|14 cores (10 performance + 4 efficiency), 14 threads|14|
 | Sofia Machado | @smachador | Apple MacBook Pro 13-inch M1 2020, macOS Tahoe 26.6.2 | 8 cores, 8 threads | 8 |
 | Manuela Yusti | @myustiieu2024-hue | Apple MacBook Air 13-inch M4 2025, macOS Sequoia 15.6.1 | 10 cores (4 performance + 6 efficiency), 10 threads | 10 |
+| Alejandro Gonzalez | @fagonzalezieu2024-lgtm | Apple MacBook Pro 14-inch M5 2025, macOS Tahoe 26 | 10 cores (4 super + 6 efficiency), 10 threads | 10 |
