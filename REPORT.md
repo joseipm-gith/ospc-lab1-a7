@@ -58,11 +58,11 @@ not whole screens.
 
 ## Task 5: Computing the statistics
 
-- Symptom:
-- Commands and recordings you used, why you chose them, and what they showed:
-- Cause:
-- Fix:
-- Before and after (your measurements):
+- Symptom: two problems. (1) `stats.sh` always started 16 workers, whatever the laptop. On Jose's 4-CPU laptop 16 workers took 64.1 s against 49.8 s with 4, and on no laptop were 16 clearly faster than one per CPU. (2) After Ctrl-C the script was gone, but its workers kept running: on my laptop, 2 s after Ctrl-C, 14 of the 16 `stats_worker.py` processes were still running, with parent PID 1.
+- Commands and recordings you used, why you chose them, and what they showed: `tools/sweep.sh` (all five laptops, `results/sweep.png`) to see how the time changes with the number of workers. `/usr/bin/time -f "$T" bash steps/stats.sh` for before and after. For Ctrl-C, I started `stats.sh` in its own process group, sent SIGINT to the whole group as Ctrl-C does (`kill -INT -- -PGID`), and ran `ps -o pid,ppid,pgid,stat,cmd -e` while it ran and 2 s later. Before: `232  1  213  Rl  python3 steps/stats_worker.py 0 16` and 13 more like it (PPID 1, so orphans adopted by PID 1). I did not use recordings; `ps` shows the parent directly.
+- Cause: (1) the default `WORKERS=${WORKERS:-16}` ignores how many CPUs the laptop has; workers beyond the number of CPUs do not run at the same time, they take turns and add switching and memory. (2) In a script (no job control) bash starts commands run with `&` with SIGINT ignored. Ctrl-C sends SIGINT to the whole foreground process group: bash, waiting in `wait`, dies, but the workers ignore the signal, keep running, and are adopted by PID 1. Nothing in the script stops them.
+- Fix: two commits. (1) `WORKERS=${WORKERS:-$(nproc)}`: one worker per CPU of the container by default, still overridable with `WORKERS=`. (2) The script keeps the PIDs of its workers (`pids+=("$!")`) and sets `trap stop INT TERM`; `stop` kills the workers, waits for them and exits with status 130 (128 + 2).
+- Before and after (your measurements): on my MacBook Pro 14-inch M5 (10 CPUs in the container). Time: before (16 workers) 4.96 s elapsed, 43.72 s user, 2.46 s system, 111,828 KB peak; after (10 workers) 4.26 s elapsed, 38.52 s user, 1.62 s system, 110,684 KB peak: 14% faster with 12% less CPU time. On Jose's laptop the median sweep times give 64.1 s with 16 workers against 49.8 s with 4 (`nproc` = 4). Ctrl-C: before, 14 workers left running after 2 s; after, the script prints `stats: stopped, killing 10 workers` and 0 are left. `tools/check.py` prints `PASS  stats.csv  72 region-months, expected 72`.
 
 ## The worker experiment
 
@@ -71,10 +71,10 @@ Every member runs `tools/sweep.sh` on their own laptop. Then run
 
 ![Elapsed time against the number of workers](results/sweep.png)
 
-- How does the elapsed time change with the number of workers on each laptop?
+- How does the elapsed time change with the number of workers on each laptop? Medians of three runs, for 1, 2, 4, 8 and 16 workers: Ares 29.5, 15.6, 8.2, 4.6, 3.9 s; Alejandro 26.2, 13.7, 7.7, 5.7, 6.0 s; Manuela 29.1, 15.1, 8.6, 6.1, 6.6 s; Sofia 35.5, 18.7, 11.3, 9.6, 10.3 s; Jose 67.4, 51.9, 49.8, 54.5, 64.1 s. On every laptop the time almost halves from 1 to 2 and from 2 to 4 workers, then stops falling once the workers reach the number of CPUs, and gets worse beyond it.
 - Why do the curves of your laptops differ? Use the cores and threads of each
-  laptop, listed in `TEAM.md`.
-- Which default number of workers did you choose for `stats.sh`, and why?
+  laptop, listed in `TEAM.md`. The workers are CPU-bound, so at most one worker per CPU can run at once. Ares has 14 cores (14 threads), so his curve still falls at 16; Alejandro and Manuela have 10 and Sofia 8 cores, so theirs flatten at 8 and rise slightly at 16; Jose's Intel laptop has 2 cores and 4 threads: the best time is at 4 workers, and even that is only 1.35 times faster than 1 worker, because 2 hyperthreads share each core. The Apple chips also mix performance and efficiency cores, so the last workers run on slower cores and the gain shrinks before the core count.
+- Which default number of workers did you choose for `stats.sh`, and why? `$(nproc)`, the number of CPUs of the container: on every laptop it is at or near the fastest point of the curve, while 16 is the slowest choice on Jose's laptop and never clearly the fastest. It adapts to any laptop, and `WORKERS=N` can still override it.
 
 ## Use of generative AI
 
@@ -128,3 +128,5 @@ Tool: Claude (Anthropic), Claude app with access to my laptop, 2 Nov 2026.
 - Text: the short answers in `members/fagonzalezieu2024-lgtm/measurements.md` were written by Claude. Every number in that file is output from my own laptop's container (MacBook Pro 14-inch M5), filled in automatically by the script.
 - Chart: Claude ran `tools/plot_sweep.py` to draw `results/sweep.png` with all five sweeps.
 - Where it needed correcting: my first runs failed because Docker Desktop was not running and because I pasted the container commands into the Mac terminal.
+- Task 5: the two fixes of `steps/stats.sh` (default `$(nproc)` workers; `trap` that kills the workers on Ctrl-C) were suggested by Claude and are marked with a comment before the code. Claude also wrote the measurement script (in my `work/task5` folder, outside the repository) and drafted the Task 5 and worker-experiment answers above from my measurements and the five `sweep.csv` files. Prompt (paraphrased): "Task 5 is me". I ran the measurements on my own laptop.
+- Where it needed correcting (Task 5): Claude's first Ctrl-C test started `stats.sh` with `&` from another script, so the script itself inherited SIGINT ignored and the trap could not run; it fixed the test to start the script with SIGINT at its default, as a terminal does.
