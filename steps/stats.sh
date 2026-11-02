@@ -12,8 +12,22 @@ OUT=${OUT:-$HOME/data/out}
 python3 steps/stats_prepare.py
 mkdir -p "$OUT/stats"
 rm -f "$OUT"/stats/part_*.csv
+# Workers started with & in a script ignore Ctrl-C (SIGINT), so without this
+# trap they keep running, orphaned, after the script is stopped. On Ctrl-C or
+# kill (SIGTERM) we stop them ourselves before exiting.
+# GenAI: this trap was suggested by Claude (Anthropic); see REPORT.md.
+pids=()
+stop() {
+    trap - INT TERM
+    echo "stats: stopped, killing ${#pids[@]} workers" >&2
+    kill "${pids[@]}" 2>/dev/null
+    wait
+    exit 130
+}
+trap stop INT TERM
 for k in $(seq 0 $((WORKERS - 1))); do
     python3 steps/stats_worker.py "$k" "$WORKERS" &
+    pids+=("$!")
 done
 wait
 cat "$OUT"/stats/part_*.csv | sort > "$OUT/stats.csv"
