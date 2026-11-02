@@ -3,7 +3,10 @@
 # region and month. The work is split among WORKERS processes that run at
 # the same time: more workers, faster results.
 
-WORKERS=${WORKERS:-16}
+# Default: one worker per CPU of the container (nproc). More workers than CPUs
+# do not run at the same time, they only take turns (see results/sweep.png).
+# GenAI: this default was suggested by Claude (Anthropic); see REPORT.md.
+WORKERS=${WORKERS:-$(nproc)}
 OUT=${OUT:-$HOME/data/out}
 
 python3 steps/stats_prepare.py
