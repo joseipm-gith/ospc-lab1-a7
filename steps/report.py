@@ -15,6 +15,7 @@ print(f"report: loaded {len(orders):,} orders ({size:.0f} MiB)")
 orders["order_date"] = pd.to_datetime(orders["order_date"])
 orders["revenue"] = orders["quantity"] * orders["unit_price"]
 
+# AI-generated code (Claude, Anthropic, 2 Nov 2026): the groupby below. Prompt: asked how to fix the memory use of report.py. Reviewed and tested by me.
 # Group the orders directly: no per-month copies, no concatenation
 table = orders.groupby(["region", orders["order_date"].dt.month])["revenue"].sum().unstack()
 table.round(2).to_csv(os.path.join(OUT, "revenue_by_region_month.csv"))
